@@ -12,108 +12,18 @@ var host_url = "https://www.ssa.gov/accessibility/andi/";
 var help_url = host_url+"help/";
 var icons_url = host_url+"icons/";
 
-//=======================//
-// EXTENSION BRIDGE API: //
-//=======================//
-// Helper functions for browser extension communication
-var AndiExtensionBridge = {
-  requestIdCounter: 0,
-  pendingRequests: new Map(),
-
-  // Generate a unique request ID
-  generateRequestId: function() {
-    return 'andi_request_' + (++this.requestIdCounter);
-  },
-
-  // Send a request to the extension content script
-  sendRequest: function(action, data) {
-    return new Promise((resolve, reject) => {
-      const requestId = this.generateRequestId();
-      
-      // Store the promise callbacks
-      this.pendingRequests.set(requestId, { resolve, reject });
-      
-      // Send the message to the content script
-      window.postMessage({
-        type: 'ANDI_EXTENSION_REQUEST',
-        action: action,
-        data: { ...data, requestId: requestId },
-        requestId: requestId
-      }, '*');
-      
-      // Set timeout for the request
-      setTimeout(() => {
-        if (this.pendingRequests.has(requestId)) {
-          this.pendingRequests.delete(requestId);
-          reject(new Error('Extension bridge request timeout'));
-        }
-      }, 10000); // 10 second timeout
-    });
-  },
-
-  // Load a script using the extension bridge
-  loadScript: function(src, id) {
-    return this.sendRequest('INJECT_SCRIPT', {
-      src: src.replace(host_url, 'andi/'), // Convert to extension path
-      id: id
-    });
-  },
-
-  // Load CSS using the extension bridge
-  loadCSS: function(href, id) {
-    return this.sendRequest('INJECT_CSS', {
-      href: href.replace(host_url, 'andi/'), // Convert to extension path
-      id: id
-    });
-  },
-
-  // Remove an element by ID
-  removeElement: function(id) {
-    return this.sendRequest('REMOVE_ELEMENT', { id: id });
-  }
-};
-
-// Listen for responses from the extension content script
-window.addEventListener('message', function(event) {
-  if (event.source !== window) return;
-  
-  if (event.data.type === 'ANDI_EXTENSION_RESPONSE') {
-    const { requestId, success, error } = event.data;
-    
-    if (AndiExtensionBridge.pendingRequests.has(requestId)) {
-      const { resolve, reject } = AndiExtensionBridge.pendingRequests.get(requestId);
-      AndiExtensionBridge.pendingRequests.delete(requestId);
-      
-      if (success) {
-        resolve(event.data);
-      } else {
-        reject(new Error(error || 'Extension bridge request failed'));
-      }
-    }
-  }
-});
-
 //Load andi.css file immediately to minimize page flash
 (function(){
-	// Check if we're running in an extension environment
-	if (typeof AndiExtensionBridge !== 'undefined') {
-		// Use extension bridge to load CSS
-		AndiExtensionBridge.loadCSS(host_url + "andi.css", "ANDI508-css").catch(function(error) {
-			console.error('Failed to load ANDI CSS via extension bridge:', error);
-		});
-	} else {
-		// Fallback to traditional method for bookmarklet
-		var head = document.getElementsByTagName("head")[0];
-		var andiCss = document.createElement("link");
-		andiCss.href = host_url + "andi.css";
-		andiCss.type = "text/css";
-		andiCss.rel = "stylesheet";
-		andiCss.id = "ANDI508-css";
-		var prevCss = document.getElementById("ANDI508-css");
-		if(prevCss)//remove already inserted CSS to improve performance on consequtive favelet launches
-			head.removeChild(prevCss);
-		head.appendChild(andiCss);
-	}
+	var head = document.getElementsByTagName("head")[0];
+	var andiCss = document.createElement("link");
+	andiCss.href = host_url + "andi.css";
+	andiCss.type = "text/css";
+	andiCss.rel = "stylesheet";
+	andiCss.id = "ANDI508-css";
+	var prevCss = document.getElementById("ANDI508-css");
+	if(prevCss)//remove already inserted CSS to improve performance on consequtive favelet launches
+		head.removeChild(prevCss);
+	head.appendChild(andiCss);
 })();
 
 //Representation of Empty String that will appear on screen
@@ -249,15 +159,7 @@ function AndiModule(moduleVersionNumber, moduleLetter){
 		$(moduleName).html(moduleLetter);
 		document.getElementById("ANDI508-toolName-link").setAttribute("aria-label", moduleLetter+"andi "+moduleVersionNumber); //using setAttribute because jquery .attr("aria-label") is not recognized by ie7
 		//Append module's css file. The version number is added to the href string (?v=) so that when the module is updated, the css file is reloaded and not pulled from browser cache
-		if (typeof AndiExtensionBridge !== 'undefined') {
-			// Use extension bridge to load module CSS
-			AndiExtensionBridge.loadCSS(host_url+moduleLetter+"andi.css", "andiModuleCss").catch(function(error) {
-				console.error('Failed to load ANDI module CSS via extension bridge:', error);
-			});
-		} else {
-			// Fallback to traditional method for bookmarklet
-			$("head").append("<link id='andiModuleCss' href='"+host_url+moduleLetter+"andi.css?v="+moduleVersionNumber+"' type='text/css' rel='stylesheet' />");
-		}
+		$("head").append("<link id='andiModuleCss' href='"+host_url+moduleLetter+"andi.css?v="+moduleVersionNumber+"' type='text/css' rel='stylesheet' />");
 	}
 
 	//Module Selection Menu Operation
@@ -417,31 +319,18 @@ AndiModule.launchModule = function(module){
 		andiCheck.areThereMoreExclusiveChildrenThanParents();
 
 		//Load the module's script
-		if (typeof AndiExtensionBridge !== 'undefined') {
-			// Use extension bridge to load module script
-			$("#andiModuleScript").remove(); //Remove previously added module script
-			$("#andiModuleCss").remove();//remove previously added module css
-			
-			AndiExtensionBridge.loadScript(host_url + module + "andi.js", "andiModuleScript").then(function() {
-				init_module();
-			}).catch(function(error) {
-				console.error('Failed to load ANDI module script via extension bridge:', error);
-			});
-		} else {
-			// Fallback to traditional method for bookmarklet
-			var script = document.createElement("script");
-			var done = false;
-			script.src = host_url + module + "andi.js";
-			script.type="text/javascript";
-			script.id="andiModuleScript";
-			script.onload = script.onreadystatechange = function(){if(!done && (!this.readyState || this.readyState=="loaded" || this.readyState=="complete")){done=true; init_module();}};
+		var script = document.createElement("script");
+		var done = false;
+		script.src = host_url + module + "andi.js";
+		script.type="text/javascript";
+		script.id="andiModuleScript";
+		script.onload = script.onreadystatechange = function(){if(!done && (!this.readyState || this.readyState=="loaded" || this.readyState=="complete")){done=true; init_module();}};
 
-			$("#andiModuleScript").remove(); //Remove previously added module script
-			$("#andiModuleCss").remove();//remove previously added module css
+		$("#andiModuleScript").remove(); //Remove previously added module script
+		$("#andiModuleCss").remove();//remove previously added module css
 
-			//Execute the module's script
-			document.getElementsByTagName("head")[0].appendChild(script);
-		}
+		//Execute the module's script
+		document.getElementsByTagName("head")[0].appendChild(script);
 
 		$("#ANDI508").removeClass().addClass("ANDI508-module-"+module).show();
 
@@ -724,19 +613,8 @@ function andiReady(){
 	//This function appends css shims to the head of the page which are needed for old IE versions
 	function appendLegacyCss(){
 		if(oldIE){
-			if (typeof AndiExtensionBridge !== 'undefined') {
-				// Use extension bridge to load IE CSS files
-				AndiExtensionBridge.loadCSS(host_url+"ie7.css", "andi-ie7-css").catch(function(error) {
-					console.error('Failed to load ANDI IE7 CSS via extension bridge:', error);
-				});
-				AndiExtensionBridge.loadCSS(host_url+"ie8.css", "andi-ie8-css").catch(function(error) {
-					console.error('Failed to load ANDI IE8 CSS via extension bridge:', error);
-				});
-			} else {
-				// Fallback to traditional method for bookmarklet
-				$("head").append("<!--[if lte IE 7]><link href='"+host_url+"ie7.css' rel='stylesheet' /><![endif]-->"+
-					"<!--[if lt IE 9]><link href='"+host_url+"ie8.css' rel='stylesheet' /><![endif]-->");
-			}
+			$("head").append("<!--[if lte IE 7]><link href='"+host_url+"ie7.css' rel='stylesheet' /><![endif]-->"+
+				"<!--[if lt IE 9]><link href='"+host_url+"ie8.css' rel='stylesheet' /><![endif]-->");
 		}
 	}
 
@@ -4284,22 +4162,13 @@ var oldIE = false; //used to determine if old version of IE is being used.
 		}
 	}
 	if(needJquery){
-		// Check if we're running in an extension environment
-		if (typeof AndiExtensionBridge !== 'undefined') {
-			// For extension, we need to load jQuery from bundled resources
-			// For now, assume jQuery will be pre-loaded or skip if not available
-			console.warn('ANDI Extension: jQuery not found, attempting to continue anyway');
-			launchAndi();
-		} else {
-			// Traditional bookmarklet approach
-			var script = document.createElement("script"); var done=false;
-			//Which version is needed?
-			if(!oldIE){script.src = jqueryDownloadSource + jqueryPreferredVersion + "/jquery.min.js";}//IE 9 or later is being used, download preferred jquery version.
-			else{script.src = jqueryDownloadSource + jqueryMinimumVersion + "/jquery.min.js";}//Download minimum jquery version.
-			//Waits until jQuery is ready before running ANDI
-			script.onload = script.onreadystatechange = function(){if(!done && (!this.readyState || this.readyState=="loaded" || this.readyState=="complete")){done=true; launchAndi();}};
-			document.getElementsByTagName("head")[0].appendChild(script);
-		}
+		var script = document.createElement("script"); var done=false;
+		//Which version is needed?
+		if(!oldIE){script.src = jqueryDownloadSource + jqueryPreferredVersion + "/jquery.min.js";}//IE 9 or later is being used, download preferred jquery version.
+		else{script.src = jqueryDownloadSource + jqueryMinimumVersion + "/jquery.min.js";}//Download minimum jquery version.
+		//Waits until jQuery is ready before running ANDI
+		script.onload = script.onreadystatechange = function(){if(!done && (!this.readyState || this.readyState=="loaded" || this.readyState=="complete")){done=true; launchAndi();}};
+		document.getElementsByTagName("head")[0].appendChild(script);
 	}
 	else{ //sufficient version of jQuery already exists
 		launchAndi(); //initialize ANDI
