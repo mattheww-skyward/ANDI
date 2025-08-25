@@ -18,24 +18,39 @@ function launchANDI(extensionUrl) {
   // Remove the trailing slash to match expected format
   const andiHost = extensionUrl.replace(/\/$/, '') + '/andi/';
   
-  // We need to override the host_url variable before andi.js loads
-  // Create a script that sets up the environment for ANDI
+  // Create a comprehensive script that completely replaces the ANDI environment
+  // This script will be inserted before andi.js loads
   const setupScript = document.createElement('script');
   setupScript.text = `
-    // Override the default host_url before ANDI loads
+    // Set global variables that ANDI expects
+    window.andiHost = "${andiHost}";
+    
+    // Override ANDI configuration before the main script loads
+    // These will be available when andi.js executes
     var host_url = "${andiHost}";
     var help_url = host_url + "help/";
     var icons_url = host_url + "icons/";
+    
+    console.log('ANDI extension: host_url set to ' + host_url);
   `;
   document.head.appendChild(setupScript);
   
-  // Create and inject the ANDI script
-  const andiScript = document.createElement('script');
-  andiScript.src = andiHost + 'andi.js';
-  andiScript.onerror = function() {
-    console.error('Failed to load ANDI script');
-    alert('Failed to load ANDI. Please check that the extension is properly installed.');
-  };
+  // Small delay to ensure the setup script executes first
+  setTimeout(function() {
+    // Create and inject the ANDI script
+    const andiScript = document.createElement('script');
+    andiScript.src = andiHost + 'andi.js';
+    andiScript.onload = function() {
+      console.log('ANDI extension: Successfully loaded ANDI script');
+    };
+    andiScript.onerror = function() {
+      console.error('ANDI extension: Failed to load ANDI script from ' + andiHost + 'andi.js');
+      alert('Failed to load ANDI. Please check that the extension is properly installed.');
+    };
+    
+    // Append the script to start ANDI
+    document.body.appendChild(andiScript);
+  }, 10);
   
   // CSP check function - same as in the original bookmarklet
   function andiCSPcheck() {
@@ -52,7 +67,4 @@ function launchANDI(extensionUrl) {
   setTimeout(function() {
     document.removeEventListener('securitypolicyviolation', andiCSPcheck);
   }, 100);
-  
-  // Append the script to start ANDI
-  document.body.appendChild(andiScript);
 }
