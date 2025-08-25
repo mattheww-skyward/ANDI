@@ -10,14 +10,23 @@ The ANDI (Accessible Name & Description Inspector) browser extension provides th
 1. Open Chrome and navigate to `chrome://extensions/`
 2. Enable "Developer mode" using the toggle in the top-right corner
 3. Click "Load unpacked"
-4. Select the `extension` folder from this repository
+4. Select the root folder of this repository (containing `manifest.json`)
 5. The ANDI extension icon should appear in your browser toolbar
 
 ### Mozilla Firefox
 1. Open Firefox and navigate to `about:debugging#/runtime/this-firefox`
 2. Click "Load Temporary Add-on..."
-3. Navigate to the `extension` folder and select `manifest.json`
+3. Navigate to the root folder and select `manifest.json`
 4. The ANDI extension icon should appear in your browser toolbar
+
+## Architecture
+
+The extension uses a modern content script bridge architecture:
+
+- **Background Script**: Handles toolbar clicks and chrome.scripting operations
+- **Content Script**: Acts as a bridge between page context and extension APIs
+- **Modified ANDI**: Uses `AndiExtensionBridge` API instead of direct script injection
+- **CSP Bypass**: All scripts execute in MAIN world context to bypass Content Security Policy
 
 ## Usage
 
@@ -25,8 +34,6 @@ The ANDI (Accessible Name & Description Inspector) browser extension provides th
 2. **Click** the ANDI extension icon in your browser toolbar
 3. **Wait** for ANDI to load and overlay its interface on the page
 4. **Use** ANDI's tools to inspect the accessibility features of page elements
-
-## Features
 
 - ✅ **Chrome & Firefox Compatible**: Works with both major browsers
 - ✅ **Manifest v3**: Uses the latest extension standard  
