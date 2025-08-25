@@ -73,7 +73,17 @@ var alertIcons = new function(){//new is intentional
 			sortPriority = "2";
 		else if(alertLevel=="danger")
 			sortPriority = "1";
-		return "<img src='"+icons_url+alertLevel+".png' alt='"+alertLevel+"' title='Accessibility Alert: "+titleText+"' /><i>"+sortPriority+" </i>";
+		var alertSymbol;
+		if(alertLevel=="danger")
+			alertSymbol = "❌";
+		else if(alertLevel=="warning")
+			alertSymbol = "⚠️";
+		else if(alertLevel=="caution")
+			alertSymbol = "⚠️";
+		else
+			alertSymbol = "ℹ️";
+		
+		return "<span class='ANDI508-alert-icon' aria-label='"+alertLevel+"' title='Accessibility Alert: "+titleText+"'>"+alertSymbol+"</span><i>"+sortPriority+" </i>";
 	}
 };
 
@@ -663,8 +673,8 @@ lANDI.viewList_buildTable = function(mode){
 	var tableHTML = "";
 	var rowClasses, tabsHTML;
 	var appendHTML = "<div id='lANDI508-viewList' class='ANDI508-viewOtherResults-expanded' style='display:none;'><div id='lANDI508-viewList-tabs'>";
-	var nextPrevHTML = "<button id='lANDI508-viewList-button-prev' aria-label='Previous Item in the list' accesskey='"+andiHotkeyList.key_prev.key+"'><img src='"+icons_url+"prev.png' alt='' /></button>"+
-		"<button id='lANDI508-viewList-button-next' aria-label='Next Item in the list'  accesskey='"+andiHotkeyList.key_next.key+"'><img src='"+icons_url+"next.png' alt='' /></button>"+
+	var nextPrevHTML = "<button id='lANDI508-viewList-button-prev' aria-label='Previous Item in the list' accesskey='"+andiHotkeyList.key_prev.key+"'><span>◀</span></button>"+
+		"<button id='lANDI508-viewList-button-next' aria-label='Next Item in the list'  accesskey='"+andiHotkeyList.key_next.key+"'><span>▶</span></button>"+
 		"</div>"+
 		"<div class='ANDI508-scrollable'><table id='ANDI508-viewList-table' aria-label='"+mode+" List' tabindex='-1'><thead><tr>";
 
@@ -761,7 +771,7 @@ lANDI.viewList_toggle = function(mode, btn){
 			.addClass("ANDI508-viewOtherResults-button-expanded")
 			.html(listIcon+"hide "+mode+" list")
 			.attr("aria-expanded","true")
-			.find("img").attr("src",icons_url+"list-on.png");
+			.find("span").text("☑");
 		$("#lANDI508-viewList").slideDown(AndiSettings.andiAnimationSpeed).focus();
 		if(mode === "links")
 			AndiModule.activeActionButtons.viewLinksList = true;

@@ -156,10 +156,10 @@ var browserSupports = {
 	isIE: /MSIE|Trident/.test(window.navigator.userAgent)
 };
 
-//Define the overlay and find icons (not using background-image because of ie7 issues with sizing)
-var overlayIcon = "<img src='"+icons_url+"overlay-off.png' class='ANDI508-overlayIcon' aria-label='overLay' />";
-var findIcon = "<img src='"+icons_url+"find-off.png' class='ANDI508-findIcon' aria-label='find' />";
-var listIcon = "<img src='"+icons_url+"list-off.png' class='ANDI508-listIcon' alt='' />";
+//Define the overlay and find icons (using Unicode symbols to avoid CSP restrictions)
+var overlayIcon = "<span class='ANDI508-overlayIcon' aria-label='overLay'>🔍</span>";
+var findIcon = "<span class='ANDI508-findIcon' aria-label='find'>🔍</span>";
+var listIcon = "<span class='ANDI508-listIcon'>☐</span>";
 
 //==================//
 // ANDI INITIALIZE: //
@@ -193,7 +193,7 @@ function launchAndi(){(window.andi508 = function(){
 				//Build Title Display
 				title = $(this).attr("title");
 				framesrc = $(this).attr("src");
-				titleDisplay = (!title) ? " <span style='color:#c4532c'><img style='width:18px' src='"+icons_url+"danger.png' alt='danger: ' /> No title attribute on this &lt;frame&gt;.</span>" : " <span style='color:#058488'>title=\""+ title + "\"</span>";
+				titleDisplay = (!title) ? " <span style='color:#c4532c'><span aria-label='danger'>⚠️</span> No title attribute on this &lt;frame&gt;.</span>" : " <span style='color:#058488'>title=\""+ title + "\"</span>";
 				framesSelectionBody += "<li><a href='"+framesrc+"'>"+framesrc+"</a>"+titleDisplay+"</li>";
 			});
 			framesSelectionBody += "</ol><button id='ANDI508-frameSelectionUI-goBack'>Go Back</button>";
@@ -396,7 +396,7 @@ AndiModule.launchModule = function(module){
 		.addClass("ANDI508-moduleMenu-selected")
 		.attr("tabindex","0")
 		.attr("aria-selected","true")
-		.append("<img src='"+icons_url+"dropdown.png' role='presentation' />");
+		.append("<span role='presentation'>▼</span>");
 
 	andiBar.showModuleLoading();
 
@@ -632,11 +632,11 @@ function andiReady(){
 	//This function creates main html structure of the ANDI Bar.
 	function insertAndiBarHtml(){
 		var menuButtons =
-			"<button id='ANDI508-button-relaunch' aria-label='Refresh ANDI' title='Refresh ANDI' accesskey='"+andiHotkeyList.key_relaunch.key+"'><img src='"+icons_url+"reload.png' alt='' /></button>"+ //refresh
-			"<button id='ANDI508-button-settings' aria-label='Advanced Settings' title='Advanced Settings'><img src='"+icons_url+"settings-off.png' alt='' /></button>"+
-			"<button id='ANDI508-button-keys' aria-label='ANDI Hotkeys List' title='ANDI Hotkeys List'><img src='"+icons_url+"keys-off.png' alt='' /></button>"+
-			"<button id='ANDI508-button-help' aria-label='ANDI Help' title='ANDI Help'><img src='"+icons_url+"help.png' alt='' /></button>"+
-			"<button id='ANDI508-button-close' aria-label='Remove ANDI' title='Remove ANDI'><img src='"+icons_url+"close.png' alt='' /></button>";
+			"<button id='ANDI508-button-relaunch' aria-label='Refresh ANDI' title='Refresh ANDI' accesskey='"+andiHotkeyList.key_relaunch.key+"'><span>🔄</span></button>"+ //refresh
+			"<button id='ANDI508-button-settings' aria-label='Advanced Settings' title='Advanced Settings'><span>⚙️</span></button>"+
+			"<button id='ANDI508-button-keys' aria-label='ANDI Hotkeys List' title='ANDI Hotkeys List'><span>⌨️</span></button>"+
+			"<button id='ANDI508-button-help' aria-label='ANDI Help' title='ANDI Help'><span>❓</span></button>"+
+			"<button id='ANDI508-button-close' aria-label='Remove ANDI' title='Remove ANDI'><span>✕</span></button>";
 
 		var moduleButtons = "<div id='ANDI508-moduleMenu' role='menu' aria-label='Select a Module'><div id='ANDI508-moduleMenu-prompt'>Select Module:</div>"+
 			//Default (fANDI)
@@ -673,8 +673,8 @@ function andiReady(){
 			"<div id='ANDI508-activeElementInspection' aria-label='Active Element Inspection' class='ANDI508-sectionJump' tabindex='-1'>"+
 				"<div id='ANDI508-activeElementResults'>"+
 					"<div id='ANDI508-elementControls'>"+
-						"<button title='Previous Element' accesskey='"+andiHotkeyList.key_prev.key+"' id='ANDI508-button-prevElement'><img src='"+icons_url+"prev.png' alt='' /></button>"+
-						"<button title='Next Element' accesskey='"+andiHotkeyList.key_next.key+"' id='ANDI508-button-nextElement'><img src='"+icons_url+"next.png' alt='' /></button>"+
+						"<button title='Previous Element' accesskey='"+andiHotkeyList.key_prev.key+"' id='ANDI508-button-prevElement'><span>◀</span></button>"+
+						"<button title='Next Element' accesskey='"+andiHotkeyList.key_next.key+"' id='ANDI508-button-nextElement'><span>▶</span></button>"+
 						"<br />"+
 					"</div>"+
 					"<div id='ANDI508-startUpSummary' tabindex='0'></div>"+
@@ -1274,7 +1274,7 @@ function AndiBar(){
 					}
 				})
 				//Add icon
-				.append(" <img src='"+icons_url+"dropdown.png' role='presentation' />");
+				.append(" <span role='presentation'>▼</span>");
 
 			$(this).next()
 				//Menu container
@@ -1467,11 +1467,11 @@ function AndiHotkeyList(){
 	//These functions Show or Hide the ANDI508-hotkeyList
 	this.showHotkeysList = function(){
 		$("#ANDI508-hotkeyList").slideDown(AndiSettings.andiAnimationSpeed).find("a").first().focus();
-		$("#ANDI508-button-keys").attr("aria-expanded","true").children("img").attr("src",icons_url+"keys-on.png");
+		$("#ANDI508-button-keys").attr("aria-expanded","true").children("span").text("⌨️");
 	};
 	this.hideHotkeysList = function(){
 		$("#ANDI508-hotkeyList").slideUp(AndiSettings.andiAnimationSpeed);
-		$("#ANDI508-button-keys").attr("aria-expanded","false").children("img").attr("src",icons_url+"keys-off.png");
+		$("#ANDI508-button-keys").attr("aria-expanded","false").children("span").text("⌨️");
 	};
 
 	//This function builds ANDI's hotkey list html
@@ -1622,12 +1622,12 @@ function AndiSettings(){
 	//These functions show/hide the settings list
 	this.showSettingsList = function(){
 		$("#ANDI508-settingsList").slideDown(AndiSettings.andiAnimationSpeed).find("a").first().focus();
-		$("#ANDI508-button-settings").attr("aria-expanded","true").children("img").first().attr("src",icons_url+"settings-on.png");
+		$("#ANDI508-button-settings").attr("aria-expanded","true").children("span").first().text("⚙️");
 	};
 	this.hideSettingsList = function(){
 		setTimeout(function(){
 			$("#ANDI508-settingsList").slideUp(AndiSettings.andiAnimationSpeed);
-			$("#ANDI508-button-settings").attr("aria-expanded","false").children("img").first().attr("src",icons_url+"settings-off.png");
+			$("#ANDI508-button-settings").attr("aria-expanded","false").children("span").first().text("⚙️");
 		},5);
 	};
 
@@ -1635,9 +1635,9 @@ function AndiSettings(){
 	function buildSettingsList(){
 		var settingsList = "<div id='ANDI508-settingsList' role='application'>"+
 			"<a rel='help' href='"+ help_url + "howtouse.html#AdvancedSettings' aria-label='Advanced Settings Help' target='_blank'>Advanced Settings:</a>"+
-			"<button id='ANDI508-button-highlights' aria-checked='true' role='checkbox'><img src='"+icons_url+"checked-on.png' alt='' /> Element Highlights</button>"+
-			"<button id='ANDI508-button-linearize' aria-checked='false' role='checkbox'><img src='"+icons_url+"checked-off.png' alt='' /> Linearize Page</button>"+
-			"<button id='ANDI508-button-minimode' aria-checked='false' role='checkbox'><img src='"+icons_url+"checked-off.png' alt='' /> Minimode</button>"+
+			"<button id='ANDI508-button-highlights' aria-checked='true' role='checkbox'><span>☑</span> Element Highlights</button>"+
+			"<button id='ANDI508-button-linearize' aria-checked='false' role='checkbox'><span>☐</span> Linearize Page</button>"+
+			"<button id='ANDI508-button-minimode' aria-checked='false' role='checkbox'><span>☐</span> Minimode</button>"+
 			"</div>";
 		$("#ANDI508-button-settings").after(settingsList);
 	}
@@ -1705,10 +1705,10 @@ function AndiSettings(){
 
 	//These functions handle the on-off state of a settings toggle
 	this.setting_on = function(button){
-		$(button).attr("aria-checked","true").children("img").first().attr("src",icons_url+"checked-on.png");
+		$(button).attr("aria-checked","true").children("span").first().text("☑");
 	};
 	this.setting_off = function(button){
-		$(button).attr("aria-checked","false").children("img").first().attr("src",icons_url+"checked-off.png");
+		$(button).attr("aria-checked","false").children("span").first().text("☐");
 	};
 }
 
@@ -2190,13 +2190,13 @@ function AndiOverlay(){
 		$(button)
 			.attr("aria-pressed","true")
 			.addClass("ANDI508-module-action-active")
-			.find("img").attr("src", icons_url+icon+".png");
+			.find("span").text("🔍");
 	};
 	this.overlayButton_off = function(icon, button){
 		$(button)
 			.attr("aria-pressed","false")
 			.removeClass("ANDI508-module-action-active")
-			.find("img").attr("src", icons_url+icon+"-off.png");
+			.find("span").text("🔍");
 	};
 }
 
@@ -3864,11 +3864,22 @@ function AndiAlerter(){
 		}
 	}
 
+	//Helper function to get Unicode symbol for alert level
+	function getAlertSymbol(level) {
+		switch(level) {
+			case "danger": return "❌";
+			case "warning": return "⚠️";
+			case "caution": return "⚠️";
+			case "info": return "ℹ️";
+			default: return "ℹ️";
+		}
+	}
+
 	//This private function will add a help link to the alert message
 	function messageWithHelpLink(alertObject, message){
 		return "<a href='"+ help_url + "alerts.html?" + alertObject.info +"' target='_blank' "+
 			"aria-label='"+alertObject.level+": "+message+" Select to Open ANDI Help"+"'>"+
-			"<img alt='"+alertObject.level+"' title='Get more info about this' role='presentation' src='"+icons_url+alertObject.level+".png' />"+
+			"<span role='presentation' title='Get more info about this'>"+getAlertSymbol(alertObject.level)+"</span>"+
 			message+"</a> ";
 	}
 
@@ -3884,13 +3895,13 @@ function AndiAlerter(){
 		if(elementIndex !== 0){
 			//Yes, this alert should point to a focusable element. Insert as link:
 			listItemHtml += "href='javascript:void(0)' data-andi508-relatedindex='"+elementIndex+"' aria-label='"+alertObject.level+": "+message+" Element #"+elementIndex+"'>"+
-			"<img alt='"+alertObject.level+"' role='presentation' src='"+icons_url+alertObject.level+".png' />"+
+			"<span role='presentation'>"+getAlertSymbol(alertObject.level)+"</span>"+
 			message+"</a></li>";
 		}
 		else{
 			//No, This alert is not specific to an indexed element. Insert message with link to help page.
 			listItemHtml += "href='"+ help_url + "alerts.html?" + alertObject.info +"' target='_blank' aria-label='"+alertObject.level+": "+message+"'>"+
-			"<img alt='"+alertObject.level+"' role='presentation' src='"+icons_url+alertObject.level+".png' />"+
+			"<span role='presentation'>"+getAlertSymbol(alertObject.level)+"</span>"+
 			message+"</a></li>";
 		}
 

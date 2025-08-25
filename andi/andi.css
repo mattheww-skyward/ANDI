@@ -386,8 +386,10 @@ body.ANDI508-testPage
 /*output*/
 #ANDI508 #ANDI508-outputText
 	{word-wrap:break-word; max-height:5em; line-height:normal; display:block; margin-top:1px;
-	padding:0px 1px 1px 1.8em; margin-left:2%; background-image:url(icons/output.png) !important;
-	background-size:18px 18px !important; background-repeat:no-repeat !important;}
+	padding:0px 1px 1px 1.8em; margin-left:2%;}
+
+#ANDI508 #ANDI508-outputText::before
+	{content: "📄"; position: absolute; margin-left: -1.5em; margin-top: 0.1em;}
 #ANDI508 #ANDI508-outputText span
 	{font:10.5pt tahoma !important;}
 #ANDI508 #ANDI508-outputText img

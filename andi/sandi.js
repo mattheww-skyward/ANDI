@@ -472,7 +472,7 @@ sANDI.results = function(){
 							.html(listIcon+"hide headings list")
 							.attr("aria-expanded","true")
 							.addClass("ANDI508-viewOtherResults-button-expanded ANDI508-module-action-active")
-							.find("img").attr("src",icons_url+"list-on.png");
+							.find("span").text("☑");
 						$("#sANDI508-outline-container").slideDown(AndiSettings.andiAnimationSpeed).focus();
 					}
 					andiResetter.resizeHeights();
