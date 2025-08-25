@@ -27,6 +27,7 @@ chrome.action.onClicked.addListener(async (tab) => {
 
 // Listen for messages from content script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  console.log("bg got message", message);
   if (message.type === 'ANDI_CONTENT_SCRIPT_REQUEST') {
     handleContentScriptRequest(message, sender.tab.id)
       .then(result => sendResponse(result))
@@ -37,6 +38,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 // Handle requests from content script
 async function handleContentScriptRequest(message, tabId) {
+  console.log("handling content script request");
   const { action, data } = message;
 
   try {
@@ -61,12 +63,13 @@ async function handleContentScriptRequest(message, tabId) {
 // Bootstrap ANDI by injecting necessary scripts
 async function bootstrapANDI(tabId) {
   try {
-    // First, check if jQuery is needed and inject it
-    await chrome.scripting.executeScript({
-      target: { tabId },
-      world: 'MAIN',
-      func: checkAndInjectjQuery
-    });
+    // todo: handle jquery
+    // doesn't matter for now
+    //await chrome.scripting.executeScript({
+    //  target: { tabId },
+    //  world: 'MAIN',
+    //  func: checkAndInjectjQuery
+    //});
 
     // Set up the ANDI environment and load the main script
     await chrome.scripting.executeScript({
@@ -76,15 +79,12 @@ async function bootstrapANDI(tabId) {
       args: [chrome.runtime.getURL('andi/')]
     });
 
-    // Fetch and execute andi.js
-    const response = await fetch(chrome.runtime.getURL('andi/andi.js'));
-    const andiScript = await response.text();
-
     await chrome.scripting.executeScript({
       target: { tabId },
       world: 'MAIN',
-      func: executeScriptContent,
-      args: [andiScript, 'andi-main-script']
+      files: [
+        "andi/andi.js",
+      ],
     });
 
     return { success: true };
@@ -107,8 +107,9 @@ async function injectScript(tabId, data) {
     await chrome.scripting.executeScript({
       target: { tabId },
       world: 'MAIN',
-      func: executeScriptContent,
-      args: [scriptContent, id]
+      files: [
+        src
+      ],
     });
 
     return { success: true };
@@ -123,22 +124,12 @@ async function injectCSS(tabId, data) {
   const { href, id } = data;
   
   try {
-    // Fetch the CSS content from the extension
-    const response = await fetch(chrome.runtime.getURL(href));
-    const cssContent = await response.text();
-
     // Insert the CSS
     await chrome.scripting.insertCSS({
       target: { tabId },
-      css: cssContent
-    });
-
-    // Also add the CSS as a link element for proper management
-    await chrome.scripting.executeScript({
-      target: { tabId },
-      world: 'MAIN',
-      func: addCSSLink,
-      args: [chrome.runtime.getURL(href), id]
+      files: [
+        href
+      ],
     });
 
     return { success: true };
@@ -157,7 +148,6 @@ async function removeElement(tabId, data) {
       target: { tabId },
       world: 'MAIN',
       func: removeElementById,
-      args: [id]
     });
 
     return { success: true };
@@ -165,39 +155,6 @@ async function removeElement(tabId, data) {
     console.error('Error removing element:', error);
     throw error;
   }
-}
-
-// Function that will be executed in the main world to add the script
-function executeScriptContent(scriptContent, id) {
-  // Remove any existing script with the same ID
-  const existingScript = document.getElementById(id);
-  if (existingScript) {
-    existingScript.remove();
-  }
-
-  // Create and execute the script
-  const script = document.createElement('script');
-  script.id = id;
-  script.type = 'text/javascript';
-  script.textContent = scriptContent;
-  document.head.appendChild(script);
-}
-
-// Function that will be executed in the main world to add the CSS link
-function addCSSLink(href, id) {
-  // Remove any existing link with the same ID
-  const existingLink = document.getElementById(id);
-  if (existingLink) {
-    existingLink.remove();
-  }
-
-  // Create and add the CSS link
-  const link = document.createElement('link');
-  link.id = id;
-  link.rel = 'stylesheet';
-  link.type = 'text/css';
-  link.href = href;
-  document.head.appendChild(link);
 }
 
 // Function that will be executed in the main world to remove an element

@@ -13,6 +13,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 // Listen for messages from the page (ANDI) requesting script/CSS injection
 window.addEventListener('message', async (event) => {
+  console.log("content script got message", event);
   // Only accept messages from the same origin
   if (event.source !== window) {
     return;
@@ -22,6 +23,7 @@ window.addEventListener('message', async (event) => {
   if (event.data.type && event.data.type === 'ANDI_EXTENSION_REQUEST') {
     try {
       const { action, data } = event.data;
+      console.log("forwarding request to bg script");
 
       // Forward the request to the background script
       const response = await chrome.runtime.sendMessage({
