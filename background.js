@@ -1,10 +1,12 @@
 // Background script for ANDI extension
-// Handles toolbar button clicks and communicates with content script
+// Handles toolbar button clicks and injects ANDI using MAIN world to bypass CSP
 
 chrome.action.onClicked.addListener((tab) => {
   // Inject and execute ANDI when the toolbar button is clicked
+  // Using world: "main" to bypass CSP restrictions
   chrome.scripting.executeScript({
     target: { tabId: tab.id },
+    world: "MAIN",
     func: launchANDI,
     args: [chrome.runtime.getURL('')]
   }).catch((error) => {
@@ -12,7 +14,7 @@ chrome.action.onClicked.addListener((tab) => {
   });
 });
 
-// Function that will be injected and executed in the page context
+// Function that will be injected and executed in the main page context
 function launchANDI(extensionUrl) {
   // Set the ANDI host to point to the extension's bundled files
   // Remove the trailing slash to match expected format
@@ -51,20 +53,4 @@ function launchANDI(extensionUrl) {
     // Append the script to start ANDI
     document.body.appendChild(andiScript);
   }, 10);
-  
-  // CSP check function - same as in the original bookmarklet
-  function andiCSPcheck() {
-    if (typeof window.andiVersionNumber === 'undefined') {
-      alert('This page has a Content Security Policy that blocks scripts like ANDI. For help, visit the ANDI Help FAQ page.');
-      window.open(andiHost + 'help/faq.html#csp');
-    }
-  }
-  
-  // Add CSP violation listener
-  document.addEventListener('securitypolicyviolation', andiCSPcheck);
-  
-  // Clean up the listener after a short delay
-  setTimeout(function() {
-    document.removeEventListener('securitypolicyviolation', andiCSPcheck);
-  }, 100);
 }
