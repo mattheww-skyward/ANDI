@@ -54,7 +54,7 @@
 	#ANDI508 #cANDI508-textshadow
 		{margin-right:1em; font-family:monospace;}
 
-	#ANDI508 #cANDI508-alertContainer img
+	#ANDI508 #cANDI508-alertContainer span.ANDI508-icon
 		{width:16px; display:inline; margin-right:3px;}
 	#ANDI508 #cANDI508-alertContainer a
 		{font:9pt tahoma !important;}

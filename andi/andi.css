@@ -41,9 +41,9 @@ body.ANDI508-testPage
 	padding:1px 2px; position:relative; background:#ffee7e; border-radius:5px; text-transform:none; text-decoration:none; border-image:none; text-shadow:none;}
 #ANDI508-testPage span.ANDI508-overlay.ANDI508-overlay-alert
 	{background:#ff7575 !important;}
-#ANDI508 img.ANDI508-overlayIcon,
-#ANDI508 img.ANDI508-findIcon,
-#ANDI508 img.ANDI508-listIcon
+#ANDI508 span.ANDI508-overlayIcon,
+#ANDI508 span.ANDI508-findIcon,
+#ANDI508 span.ANDI508-listIcon
 	{height:12px !important; display:inline !important; margin:0 3px 0px 3px !important; vertical-align:bottom;}
 #ANDI508-testPage .ANDI508-overlay-associated
 	{box-shadow:0 0 2px 5px #C2FF64 !important; animation:none !important;}
@@ -85,7 +85,6 @@ body.ANDI508-testPage
 #ANDI508 li,
 #ANDI508 a,
 #ANDI508 button,
-#ANDI508 img,
 #ANDI508 table,
 #ANDI508 thead,
 #ANDI508 tbody,
@@ -268,8 +267,6 @@ body.ANDI508-testPage
 #ANDI508 #ANDI508-moduleMenu button
 	{display:none; font:normal 11.5pt verdana !important; border:1px solid black; border-radius:13px; position:static;
 	height:26px; padding:0 4px; text-align:center; margin:4px 1px 1px 1px; width:11em; white-space:nowrap;}
-#ANDI508 #ANDI508-moduleMenu button img
-	{display:inline; margin:0 0 2px 2px;}
 
 #ANDI508 #ANDI508-moduleMenu button:focus,
 #ANDI508 #ANDI508-moduleMenu button:hover,
@@ -288,7 +285,7 @@ body.ANDI508-testPage
 	{box-shadow:none !important; border:1px solid gray !important;}
 #ANDI508 #ANDI508-moduleMenu.ANDI508-moduleMenu-expanded #ANDI508-moduleMenu-prompt
 	{display:inline-block;}
-#ANDI508 #ANDI508-moduleMenu.ANDI508-moduleMenu-expanded button img
+#ANDI508 #ANDI508-moduleMenu.ANDI508-moduleMenu-expanded button span[role="presentation"]
 	{display:none !important;}
 
 #ANDI508 #ANDI508-moduleMenu .ANDI508-moduleMenu-unavailable
@@ -392,7 +389,7 @@ body.ANDI508-testPage
 	{content: "📄"; position: absolute; margin-left: -1.5em; margin-top: 0.1em;}
 #ANDI508 #ANDI508-outputText span
 	{font:10.5pt tahoma !important;}
-#ANDI508 #ANDI508-outputText img
+#ANDI508 #ANDI508-outputText span.ANDI508-icon
 	{width:14px; display:inline; margin-right:3px;}
 #ANDI508 #ANDI508-outputText .ANDI508-display-id
 	{display:none;}
@@ -437,20 +434,18 @@ body.ANDI508-testPage
 		{font-size:8pt;}
 	#ANDI508 #ANDI508-viewList-table a:hover
 		{text-decoration:underline !important;}
-	#ANDI508 #ANDI508-viewList-table td img
+	#ANDI508 #ANDI508-viewList-table td span
 		{width:16px;}
 
 	/*red highlight*/
 	#ANDI508 #ANDI508-viewList-table tr.ANDI508-table-row-alert td,
 	#ANDI508 #ANDI508-viewList-table tr.ANDI508-table-row-alert td a,
-	#ANDI508 #ANDI508-viewList-table tr.ANDI508-table-row-alert td span,
-	#ANDI508 #ANDI508-viewList-table tr.ANDI508-table-row-alert td img
+	#ANDI508 #ANDI508-viewList-table tr.ANDI508-table-row-alert td span
 		{background-color: #300000 !important;}
 	/*blue hover*/
 	#ANDI508 #ANDI508-viewList-table tr:hover td,
 	#ANDI508 #ANDI508-viewList-table tr:hover td a,
-	#ANDI508 #ANDI508-viewList-table tr:hover td span,
-	#ANDI508 #ANDI508-viewList-table tr:hover td img
+	#ANDI508 #ANDI508-viewList-table tr:hover td span
 		{background-color: #01011f !important;}
 	/*pink text*/
 	#ANDI508 #ANDI508-viewList-table tbody tr.ANDI508-table-row-inspecting td,
@@ -476,7 +471,7 @@ body.ANDI508-testPage
 	{padding:2px;}
 #ANDI508 #ANDI508-alerts-list li a:hover
 	{font-size:9pt; font-weight:normal; text-decoration:underline !important;}
-#ANDI508 #ANDI508-alerts-list img
+#ANDI508 #ANDI508-alerts-list span.ANDI508-icon
 	{width:16px; margin-right:3px; display:inline;}
 
 #ANDI508 #ANDI508-alerts-list .ANDI508-alertGroup-list
@@ -515,7 +510,7 @@ body.ANDI508-testPage
 #ANDI508 #ANDI508-barControls #ANDI508-settingsList button:hover,
 #ANDI508 #ANDI508-barControls #ANDI508-settingsList button:focus
 	{outline:0 !important; background-color:#313131 !important;}
-#ANDI508 #ANDI508-barControls #ANDI508-settingsList button img
+#ANDI508 #ANDI508-barControls #ANDI508-settingsList button span
 	{width:11px !important;}
 
 /*bar controls buttons*/
@@ -530,8 +525,8 @@ body.ANDI508-testPage
 #ANDI508 #ANDI508-barControls button:hover,
 #ANDI508 #ANDI508-elementControls button:hover
 	{border:1px solid lemonchiffon !important;}
-#ANDI508 #ANDI508-barControls button img,
-#ANDI508 #ANDI508-elementControls button img
+#ANDI508 #ANDI508-barControls button span,
+#ANDI508 #ANDI508-elementControls button span
 	{width:22px}
 #ANDI508 #ANDI508-elementControls button
 	{font-size:9pt; border:1px solid gray; display:none; margin:2px 2px 0.5em 0.5em !important; padding:6px 3px 5px 3px !important;
