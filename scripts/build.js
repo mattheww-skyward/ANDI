@@ -56,7 +56,6 @@ const filesToCopy = [
   'background.js',
   'content-script.js', 
   'jquery-3.7.1.min.js',
-  'readme.md'
 ];
 
 const dirsToCopy = [

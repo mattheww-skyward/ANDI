@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "ANDI - Accessible Name & Description Inspector",
+  "name": "Unofficial ANDI",
   "version": "1.0.0",
   "description": "Accessibility testing tool that reveals the accessible name and description of elements on a web page",
   "permissions": [
