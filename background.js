@@ -16,7 +16,7 @@ chrome.action.onClicked.addListener(async (tab) => {
 
 // Listen for messages from content script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log("bg got message", message);
+  console.info("bg got message", message);
   if (message.type === 'ANDI_CONTENT_SCRIPT_REQUEST') {
     handleContentScriptRequest(message, sender.tab.id)
       .then(result => sendResponse(result))
@@ -27,7 +27,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 // Handle requests from content script
 async function handleContentScriptRequest(message, tabId) {
-  console.log("handling content script request");
+  console.info("handling content script request");
   const { action, data } = message;
 
   try {

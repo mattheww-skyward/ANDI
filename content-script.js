@@ -3,7 +3,7 @@
 
 // Listen for messages from the page (ANDI) requesting script/CSS injection
 window.addEventListener('message', async (event) => {
-  console.log("content script got message", event);
+  console.info("content script got message", event);
   // Only accept messages from the same origin
   if (event.source !== window) {
     return;
@@ -13,7 +13,7 @@ window.addEventListener('message', async (event) => {
   if (event.data.type && event.data.type === 'ANDI_EXTENSION_REQUEST') {
     try {
       const { action, data } = event.data;
-      console.log("forwarding request to bg script");
+      console.info("forwarding request to bg script");
 
       // Forward the request to the background script
       const response = await chrome.runtime.sendMessage({
@@ -55,7 +55,7 @@ async function bootstrapANDI() {
       },
     });
 
-    console.log('ANDI bootstrap completed successfully');
+    console.info('ANDI bootstrap completed successfully');
   } catch (error) {
     console.error('Error bootstrapping ANDI:', error);
     throw error;

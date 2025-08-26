@@ -4250,7 +4250,7 @@ var oldIE = false; //used to determine if old version of IE is being used.
 	if(needJquery){
 		// For extension, we need to load jQuery from bundled resources
 		// For now, assume jQuery will be pre-loaded or skip if not available
-		console.warn('ANDI Extension: Loading jQuery');
+		console.info('ANDI Extension: Loading jQuery');
         await AndiExtensionBridge.loadScript("/jquery-3.7.1.min.js");
 		launchAndi();
 	}
