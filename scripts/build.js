@@ -62,6 +62,9 @@ const dirsToCopy = [
   'andi',
   'icons'
 ];
+const dirsToNotCopy = [
+  'help'
+];
 
 // Copy files
 filesToCopy.forEach(file => {
@@ -83,7 +86,10 @@ function copyDir(src, dest) {
     const destPath = path.join(dest, entry.name);
     
     if (entry.isDirectory()) {
-      copyDir(srcPath, destPath);
+      if (!dirsToNotCopy.includes(entry.name))
+      {
+        copyDir(srcPath, destPath);
+      }
     } else {
       fs.copyFileSync(srcPath, destPath);
     }
