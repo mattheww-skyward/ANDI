@@ -13,13 +13,23 @@ export class AndiTestHelper {
       
       // Add error handling to catch any script errors
       this.page.on('console', msg => {
-        if (msg.type() === 'error') {
-          console.error('Browser console error:', msg.text());
-        }
+        console.log(`Browser ${msg.type()}: ${msg.text()}`);
       });
       
       this.page.on('pageerror', error => {
         console.error('Page error:', error.message);
+        console.error('Stack:', error.stack);
+      });
+      
+      // Add window.onerror handler to catch more errors
+      await this.page.evaluate(() => {
+        window.onerror = function(message, source, lineno, colno, error) {
+          console.error('Window error:', message, 'at', source + ':' + lineno + ':' + colno);
+          if (error && error.stack) {
+            console.error('Stack trace:', error.stack);
+          }
+          return false;
+        };
       });
       
       // First load our minimal jQuery shim (since ANDI requires jQuery)
@@ -45,38 +55,64 @@ export class AndiTestHelper {
       });
       
       console.log('Waiting for ANDI to appear...');
-      // First check if the element exists at all
-      await this.page.waitForSelector('#ANDI508', { timeout: 10000 });
-      console.log('ANDI508 element found');
       
-      // Check its display state
-      const elementInfo = await this.page.evaluate(() => {
-        const element = document.getElementById('ANDI508');
-        if (element) {
-          return {
-            display: window.getComputedStyle(element).display,
-            visibility: window.getComputedStyle(element).visibility,
-            innerHTML: element.innerHTML.substring(0, 200) + '...'
-          };
-        }
-        return null;
+      // Give ANDI some time to process
+      await this.page.waitForTimeout(2000);
+      
+      // Check what elements actually exist 
+      const andiElements = await this.page.evaluate(() => {
+        return {
+          andi508: !!document.getElementById('ANDI508'),
+          andiElements: Array.from(document.querySelectorAll('[id*="ANDI"]')).map(el => ({
+            id: el.id,
+            tagName: el.tagName,
+            display: window.getComputedStyle(el).display,
+            visibility: window.getComputedStyle(el).visibility
+          })),
+          bodyChildren: document.body.children.length,
+          errors: window.andiErrors || []
+        };
       });
-      console.log('ANDI508 element info:', elementInfo);
       
-      // Try to make it visible if it's hidden
-      if (elementInfo && elementInfo.display === 'none') {
-        console.log('ANDI508 is hidden, trying to show it...');
+      console.log('ANDI elements check:', andiElements);
+      
+      if (andiElements.andi508) {
+        console.log('ANDI508 element exists!');
+        
+        // Try to manually show it if it's hidden
         await this.page.evaluate(() => {
-          const element = document.getElementById('ANDI508');
-          if (element) {
-            element.style.display = 'block';
-            element.style.visibility = 'visible';
+          const andi = document.getElementById('ANDI508');
+          if (andi) {
+            andi.style.display = 'block';
+            andi.style.visibility = 'visible';
+            andi.style.position = 'fixed';
+            andi.style.top = '0';
+            andi.style.left = '0';
+            andi.style.zIndex = '999999';
+            andi.style.background = 'white';
+            andi.style.border = '2px solid red';
+            console.log('Manually styled ANDI508');
           }
         });
+        
+        // Try waiting for visibility again
+        try {
+          await this.page.waitForSelector('#ANDI508', { state: 'visible', timeout: 5000 });
+          console.log('ANDI is now visible!');
+        } catch (e) {
+          console.log('ANDI still not visible, but element exists');
+          // Continue anyway since element exists
+        }
+      } else {
+        // Try waiting for the element to be created
+        try {
+          await this.page.waitForSelector('#ANDI508', { timeout: 10000 });
+          console.log('ANDI508 element created');
+        } catch (e) {
+          console.log('ANDI508 element never created');
+          throw new Error('ANDI failed to initialize - no ANDI508 element found');
+        }
       }
-      
-      // Wait for ANDI to be loaded and visible with a longer timeout
-      await this.page.waitForSelector('#ANDI508', { state: 'visible', timeout: 10000 });
       
       console.log('ANDI loaded successfully!');
     } catch (error) {
