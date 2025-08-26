@@ -75,7 +75,7 @@ iANDI.results = function(){
 					.html(listIcon+"hide iframe list")
 					.attr("aria-expanded","true")
 					.addClass("ANDI508-viewOtherResults-button-expanded ANDI508-module-action-active")
-					.find("img").attr("src",icons_url+"list-on.png");
+					.find("span").text("☑");
 				$("#iANDI508-iframeList-container").slideDown(AndiSettings.andiAnimationSpeed).focus();
 			}
 			andiResetter.resizeHeights();

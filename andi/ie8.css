@@ -1,5 +1,5 @@
 #ANDI508 #ANDI508-outputText
-	{background-image: url(icons/output18x18.png) !important;}
+	{/*background-image: url(icons/output18x18.png) !important;*//*icons replaced with Unicode*/}
 #ANDI508-laser-container
 	{height:0px; width:0px;}
 

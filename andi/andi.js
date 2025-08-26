@@ -12,18 +12,88 @@ var host_url = "https://www.ssa.gov/accessibility/andi/";
 var help_url = host_url+"help/";
 var icons_url = host_url+"icons/";
 
+//=======================//
+// EXTENSION BRIDGE API: //
+//=======================//
+// Helper functions for browser extension communication
+var AndiExtensionBridge = {
+  requestIdCounter: 0,
+  pendingRequests: new Map(),
+
+  // Generate a unique request ID
+  generateRequestId: function() {
+    return 'andi_request_' + (++this.requestIdCounter);
+  },
+
+  // Send a request to the extension content script
+  sendRequest: function(action, data) {
+    return new Promise((resolve, reject) => {
+      const requestId = this.generateRequestId();
+      
+      // Store the promise callbacks
+      this.pendingRequests.set(requestId, { resolve, reject });
+      
+      // Send the message to the content script
+      window.postMessage({
+        type: 'ANDI_EXTENSION_REQUEST',
+        action: action,
+        data: { ...data, requestId: requestId },
+        requestId: requestId
+      }, '*');
+      
+      // Set timeout for the request
+      setTimeout(() => {
+        if (this.pendingRequests.has(requestId)) {
+          this.pendingRequests.delete(requestId);
+          reject(new Error('Extension bridge request timeout'));
+        }
+      }, 10000); // 10 second timeout
+    });
+  },
+
+  // Load a script using the extension bridge
+  loadScript: function(src, id) {
+    return this.sendRequest('INJECT_SCRIPT', {
+      src: src.replace(host_url, 'andi/'), // Convert to extension path
+      id: id
+    });
+  },
+
+  // Load CSS using the extension bridge
+  loadCSS: function(href, id) {
+    return this.sendRequest('INJECT_CSS', {
+      href: href.replace(host_url, 'andi/'), // Convert to extension path
+      id: id
+    });
+  },
+};
+
+// Listen for responses from the extension content script
+window.addEventListener('message', function(event) {
+  if (event.source !== window) return;
+  
+  if (event.data.type === 'ANDI_EXTENSION_RESPONSE') {
+    const { requestId, success, error } = event.data;
+    
+    if (AndiExtensionBridge.pendingRequests.has(requestId)) {
+      const { resolve, reject } = AndiExtensionBridge.pendingRequests.get(requestId);
+      AndiExtensionBridge.pendingRequests.delete(requestId);
+      
+      if (success) {
+        resolve(event.data);
+      } else {
+        reject(new Error(error || 'Extension bridge request failed'));
+      }
+    }
+  }
+});
+
 //Load andi.css file immediately to minimize page flash
 (function(){
-	var head = document.getElementsByTagName("head")[0];
-	var andiCss = document.createElement("link");
-	andiCss.href = host_url + "andi.css";
-	andiCss.type = "text/css";
-	andiCss.rel = "stylesheet";
-	andiCss.id = "ANDI508-css";
-	var prevCss = document.getElementById("ANDI508-css");
-	if(prevCss)//remove already inserted CSS to improve performance on consequtive favelet launches
-		head.removeChild(prevCss);
-	head.appendChild(andiCss);
+	// Use extension bridge to load CSS
+	AndiExtensionBridge.loadCSS(host_url + "andi.css", "ANDI508-css").catch(function(error) {
+		console.error('Failed to load ANDI CSS via extension bridge:', error);
+	});
 })();
 
 //Representation of Empty String that will appear on screen
@@ -66,10 +136,10 @@ var browserSupports = {
 	isIE: /MSIE|Trident/.test(window.navigator.userAgent)
 };
 
-//Define the overlay and find icons (not using background-image because of ie7 issues with sizing)
-var overlayIcon = "<img src='"+icons_url+"overlay-off.png' class='ANDI508-overlayIcon' aria-label='overLay' />";
-var findIcon = "<img src='"+icons_url+"find-off.png' class='ANDI508-findIcon' aria-label='find' />";
-var listIcon = "<img src='"+icons_url+"list-off.png' class='ANDI508-listIcon' alt='' />";
+//Define the overlay and find icons (using Unicode symbols to avoid CSP restrictions)
+var overlayIcon = "<span class='ANDI508-overlayIcon' aria-label='overLay'>🔍</span>";
+var findIcon = "<span class='ANDI508-findIcon' aria-label='find'>🔍</span>";
+var listIcon = "<span class='ANDI508-listIcon'>☐</span>";
 
 //==================//
 // ANDI INITIALIZE: //
@@ -103,7 +173,7 @@ function launchAndi(){(window.andi508 = function(){
 				//Build Title Display
 				title = $(this).attr("title");
 				framesrc = $(this).attr("src");
-				titleDisplay = (!title) ? " <span style='color:#c4532c'><img style='width:18px' src='"+icons_url+"danger.png' alt='danger: ' /> No title attribute on this &lt;frame&gt;.</span>" : " <span style='color:#058488'>title=\""+ title + "\"</span>";
+				titleDisplay = (!title) ? " <span style='color:#c4532c'><span aria-label='danger'>⚠️</span> No title attribute on this &lt;frame&gt;.</span>" : " <span style='color:#058488'>title=\""+ title + "\"</span>";
 				framesSelectionBody += "<li><a href='"+framesrc+"'>"+framesrc+"</a>"+titleDisplay+"</li>";
 			});
 			framesSelectionBody += "</ol><button id='ANDI508-frameSelectionUI-goBack'>Go Back</button>";
@@ -159,7 +229,10 @@ function AndiModule(moduleVersionNumber, moduleLetter){
 		$(moduleName).html(moduleLetter);
 		document.getElementById("ANDI508-toolName-link").setAttribute("aria-label", moduleLetter+"andi "+moduleVersionNumber); //using setAttribute because jquery .attr("aria-label") is not recognized by ie7
 		//Append module's css file. The version number is added to the href string (?v=) so that when the module is updated, the css file is reloaded and not pulled from browser cache
-		$("head").append("<link id='andiModuleCss' href='"+host_url+moduleLetter+"andi.css?v="+moduleVersionNumber+"' type='text/css' rel='stylesheet' />");
+		// Use extension bridge to load module CSS
+		AndiExtensionBridge.loadCSS(host_url+moduleLetter+"andi.css", "andiModuleCss").catch(function(error) {
+			console.error('Failed to load ANDI module CSS via extension bridge:', error);
+		});
 	}
 
 	//Module Selection Menu Operation
@@ -291,14 +364,14 @@ AndiModule.launchModule = function(module){
 		.attr("tabindex","-1")
 		.removeClass("ANDI508-moduleMenu-selected ANDI508-moduleMenu-unavailable")
 		.removeAttr("aria-selected")
-		.find("img").first().remove();
+		.find("span[role='presentation']").remove();
 
 	//Select this module
 	$("#ANDI508-moduleMenu-button-"+module)
 		.addClass("ANDI508-moduleMenu-selected")
 		.attr("tabindex","0")
 		.attr("aria-selected","true")
-		.append("<img src='"+icons_url+"dropdown.png' role='presentation' />");
+		.append("<span role='presentation'>▼</span>");
 
 	andiBar.showModuleLoading();
 
@@ -319,18 +392,15 @@ AndiModule.launchModule = function(module){
 		andiCheck.areThereMoreExclusiveChildrenThanParents();
 
 		//Load the module's script
-		var script = document.createElement("script");
-		var done = false;
-		script.src = host_url + module + "andi.js";
-		script.type="text/javascript";
-		script.id="andiModuleScript";
-		script.onload = script.onreadystatechange = function(){if(!done && (!this.readyState || this.readyState=="loaded" || this.readyState=="complete")){done=true; init_module();}};
-
+		// Use extension bridge to load module script
 		$("#andiModuleScript").remove(); //Remove previously added module script
 		$("#andiModuleCss").remove();//remove previously added module css
-
-		//Execute the module's script
-		document.getElementsByTagName("head")[0].appendChild(script);
+		
+		AndiExtensionBridge.loadScript(host_url + module + "andi.js", "andiModuleScript").then(function() {
+			init_module();
+		}).catch(function(error) {
+			console.error('Failed to load ANDI module script via extension bridge:', error);
+		});
 
 		$("#ANDI508").removeClass().addClass("ANDI508-module-"+module).show();
 
@@ -521,11 +591,11 @@ function andiReady(){
 	//This function creates main html structure of the ANDI Bar.
 	function insertAndiBarHtml(){
 		var menuButtons =
-			"<button id='ANDI508-button-relaunch' aria-label='Refresh ANDI' title='Refresh ANDI' accesskey='"+andiHotkeyList.key_relaunch.key+"'><img src='"+icons_url+"reload.png' alt='' /></button>"+ //refresh
-			"<button id='ANDI508-button-settings' aria-label='Advanced Settings' title='Advanced Settings'><img src='"+icons_url+"settings-off.png' alt='' /></button>"+
-			"<button id='ANDI508-button-keys' aria-label='ANDI Hotkeys List' title='ANDI Hotkeys List'><img src='"+icons_url+"keys-off.png' alt='' /></button>"+
-			"<button id='ANDI508-button-help' aria-label='ANDI Help' title='ANDI Help'><img src='"+icons_url+"help.png' alt='' /></button>"+
-			"<button id='ANDI508-button-close' aria-label='Remove ANDI' title='Remove ANDI'><img src='"+icons_url+"close.png' alt='' /></button>";
+			"<button id='ANDI508-button-relaunch' aria-label='Refresh ANDI' title='Refresh ANDI' accesskey='"+andiHotkeyList.key_relaunch.key+"'><span>🔄</span></button>"+ //refresh
+			"<button id='ANDI508-button-settings' aria-label='Advanced Settings' title='Advanced Settings'><span>⚙️</span></button>"+
+			"<button id='ANDI508-button-keys' aria-label='ANDI Hotkeys List' title='ANDI Hotkeys List'><span>⌨️</span></button>"+
+			"<button id='ANDI508-button-help' aria-label='ANDI Help' title='ANDI Help'><span>❓</span></button>"+
+			"<button id='ANDI508-button-close' aria-label='Remove ANDI' title='Remove ANDI'><span>✕</span></button>";
 
 		var moduleButtons = "<div id='ANDI508-moduleMenu' role='menu' aria-label='Select a Module'><div id='ANDI508-moduleMenu-prompt'>Select Module:</div>"+
 			//Default (fANDI)
@@ -562,8 +632,8 @@ function andiReady(){
 			"<div id='ANDI508-activeElementInspection' aria-label='Active Element Inspection' class='ANDI508-sectionJump' tabindex='-1'>"+
 				"<div id='ANDI508-activeElementResults'>"+
 					"<div id='ANDI508-elementControls'>"+
-						"<button title='Previous Element' accesskey='"+andiHotkeyList.key_prev.key+"' id='ANDI508-button-prevElement'><img src='"+icons_url+"prev.png' alt='' /></button>"+
-						"<button title='Next Element' accesskey='"+andiHotkeyList.key_next.key+"' id='ANDI508-button-nextElement'><img src='"+icons_url+"next.png' alt='' /></button>"+
+						"<button title='Previous Element' accesskey='"+andiHotkeyList.key_prev.key+"' id='ANDI508-button-prevElement'><span>◀</span></button>"+
+						"<button title='Next Element' accesskey='"+andiHotkeyList.key_next.key+"' id='ANDI508-button-nextElement'><span>▶</span></button>"+
 						"<br />"+
 					"</div>"+
 					"<div id='ANDI508-startUpSummary' tabindex='0'></div>"+
@@ -613,8 +683,13 @@ function andiReady(){
 	//This function appends css shims to the head of the page which are needed for old IE versions
 	function appendLegacyCss(){
 		if(oldIE){
-			$("head").append("<!--[if lte IE 7]><link href='"+host_url+"ie7.css' rel='stylesheet' /><![endif]-->"+
-				"<!--[if lt IE 9]><link href='"+host_url+"ie8.css' rel='stylesheet' /><![endif]-->");
+			// Use extension bridge to load IE CSS files
+			AndiExtensionBridge.loadCSS(host_url+"ie7.css", "andi-ie7-css").catch(function(error) {
+				console.error('Failed to load ANDI IE7 CSS via extension bridge:', error);
+			});
+			AndiExtensionBridge.loadCSS(host_url+"ie8.css", "andi-ie8-css").catch(function(error) {
+				console.error('Failed to load ANDI IE8 CSS via extension bridge:', error);
+			});
 		}
 	}
 
@@ -1152,7 +1227,7 @@ function AndiBar(){
 					}
 				})
 				//Add icon
-				.append(" <img src='"+icons_url+"dropdown.png' role='presentation' />");
+				.append(" <span role='presentation'>▼</span>");
 
 			$(this).next()
 				//Menu container
@@ -1345,11 +1420,11 @@ function AndiHotkeyList(){
 	//These functions Show or Hide the ANDI508-hotkeyList
 	this.showHotkeysList = function(){
 		$("#ANDI508-hotkeyList").slideDown(AndiSettings.andiAnimationSpeed).find("a").first().focus();
-		$("#ANDI508-button-keys").attr("aria-expanded","true").children("img").attr("src",icons_url+"keys-on.png");
+		$("#ANDI508-button-keys").attr("aria-expanded","true").children("span").text("⌨️");
 	};
 	this.hideHotkeysList = function(){
 		$("#ANDI508-hotkeyList").slideUp(AndiSettings.andiAnimationSpeed);
-		$("#ANDI508-button-keys").attr("aria-expanded","false").children("img").attr("src",icons_url+"keys-off.png");
+		$("#ANDI508-button-keys").attr("aria-expanded","false").children("span").text("⌨️");
 	};
 
 	//This function builds ANDI's hotkey list html
@@ -1500,12 +1575,12 @@ function AndiSettings(){
 	//These functions show/hide the settings list
 	this.showSettingsList = function(){
 		$("#ANDI508-settingsList").slideDown(AndiSettings.andiAnimationSpeed).find("a").first().focus();
-		$("#ANDI508-button-settings").attr("aria-expanded","true").children("img").first().attr("src",icons_url+"settings-on.png");
+		$("#ANDI508-button-settings").attr("aria-expanded","true").children("span").first().text("⚙️");
 	};
 	this.hideSettingsList = function(){
 		setTimeout(function(){
 			$("#ANDI508-settingsList").slideUp(AndiSettings.andiAnimationSpeed);
-			$("#ANDI508-button-settings").attr("aria-expanded","false").children("img").first().attr("src",icons_url+"settings-off.png");
+			$("#ANDI508-button-settings").attr("aria-expanded","false").children("span").first().text("⚙️");
 		},5);
 	};
 
@@ -1513,9 +1588,9 @@ function AndiSettings(){
 	function buildSettingsList(){
 		var settingsList = "<div id='ANDI508-settingsList' role='application'>"+
 			"<a rel='help' href='"+ help_url + "howtouse.html#AdvancedSettings' aria-label='Advanced Settings Help' target='_blank'>Advanced Settings:</a>"+
-			"<button id='ANDI508-button-highlights' aria-checked='true' role='checkbox'><img src='"+icons_url+"checked-on.png' alt='' /> Element Highlights</button>"+
-			"<button id='ANDI508-button-linearize' aria-checked='false' role='checkbox'><img src='"+icons_url+"checked-off.png' alt='' /> Linearize Page</button>"+
-			"<button id='ANDI508-button-minimode' aria-checked='false' role='checkbox'><img src='"+icons_url+"checked-off.png' alt='' /> Minimode</button>"+
+			"<button id='ANDI508-button-highlights' aria-checked='true' role='checkbox'><span>☑</span> Element Highlights</button>"+
+			"<button id='ANDI508-button-linearize' aria-checked='false' role='checkbox'><span>☐</span> Linearize Page</button>"+
+			"<button id='ANDI508-button-minimode' aria-checked='false' role='checkbox'><span>☐</span> Minimode</button>"+
 			"</div>";
 		$("#ANDI508-button-settings").after(settingsList);
 	}
@@ -1583,10 +1658,10 @@ function AndiSettings(){
 
 	//These functions handle the on-off state of a settings toggle
 	this.setting_on = function(button){
-		$(button).attr("aria-checked","true").children("img").first().attr("src",icons_url+"checked-on.png");
+		$(button).attr("aria-checked","true").children("span").first().text("☑");
 	};
 	this.setting_off = function(button){
-		$(button).attr("aria-checked","false").children("img").first().attr("src",icons_url+"checked-off.png");
+		$(button).attr("aria-checked","false").children("span").first().text("☐");
 	};
 }
 
@@ -2068,13 +2143,13 @@ function AndiOverlay(){
 		$(button)
 			.attr("aria-pressed","true")
 			.addClass("ANDI508-module-action-active")
-			.find("img").attr("src", icons_url+icon+".png");
+			.find("span").text("🔍");
 	};
 	this.overlayButton_off = function(icon, button){
 		$(button)
 			.attr("aria-pressed","false")
 			.removeClass("ANDI508-module-action-active")
-			.find("img").attr("src", icons_url+icon+"-off.png");
+			.find("span").text("🔍");
 	};
 }
 
@@ -3742,11 +3817,22 @@ function AndiAlerter(){
 		}
 	}
 
+	//Helper function to get Unicode symbol for alert level
+	function getAlertSymbol(level) {
+		switch(level) {
+			case "danger": return "❌";
+			case "warning": return "⚠️";
+			case "caution": return "⚠️";
+			case "info": return "ℹ️";
+			default: return "ℹ️";
+		}
+	}
+
 	//This private function will add a help link to the alert message
 	function messageWithHelpLink(alertObject, message){
 		return "<a href='"+ help_url + "alerts.html?" + alertObject.info +"' target='_blank' "+
 			"aria-label='"+alertObject.level+": "+message+" Select to Open ANDI Help"+"'>"+
-			"<img alt='"+alertObject.level+"' title='Get more info about this' role='presentation' src='"+icons_url+alertObject.level+".png' />"+
+			"<span role='presentation' title='Get more info about this'>"+getAlertSymbol(alertObject.level)+"</span>"+
 			message+"</a> ";
 	}
 
@@ -3762,13 +3848,13 @@ function AndiAlerter(){
 		if(elementIndex !== 0){
 			//Yes, this alert should point to a focusable element. Insert as link:
 			listItemHtml += "href='javascript:void(0)' data-andi508-relatedindex='"+elementIndex+"' aria-label='"+alertObject.level+": "+message+" Element #"+elementIndex+"'>"+
-			"<img alt='"+alertObject.level+"' role='presentation' src='"+icons_url+alertObject.level+".png' />"+
+			"<span role='presentation'>"+getAlertSymbol(alertObject.level)+"</span>"+
 			message+"</a></li>";
 		}
 		else{
 			//No, This alert is not specific to an indexed element. Insert message with link to help page.
 			listItemHtml += "href='"+ help_url + "alerts.html?" + alertObject.info +"' target='_blank' aria-label='"+alertObject.level+": "+message+"'>"+
-			"<img alt='"+alertObject.level+"' role='presentation' src='"+icons_url+alertObject.level+".png' />"+
+			"<span role='presentation'>"+getAlertSymbol(alertObject.level)+"</span>"+
 			message+"</a></li>";
 		}
 
@@ -4143,7 +4229,7 @@ var jqueryPreferredVersion = "3.7.1"; //The preferred (latest) version of jQuery
 var jqueryMinimumVersion = "1.9.1"; //The minimum version of jQuery we allow ANDI to use
 var jqueryDownloadSource = "https://ajax.googleapis.com/ajax/libs/jquery/"; //where we are downloading jquery from
 var oldIE = false; //used to determine if old version of IE is being used.
-(function(){
+(async function(){
 	//Determine if old IE compatability mode
 	if(navigator.userAgent.toLowerCase().indexOf("msie") != -1){if(parseInt(navigator.userAgent.toLowerCase().split("msie")[1]) < 9){oldIE = true;}}
 	//Determine if Jquery exists
@@ -4162,13 +4248,11 @@ var oldIE = false; //used to determine if old version of IE is being used.
 		}
 	}
 	if(needJquery){
-		var script = document.createElement("script"); var done=false;
-		//Which version is needed?
-		if(!oldIE){script.src = jqueryDownloadSource + jqueryPreferredVersion + "/jquery.min.js";}//IE 9 or later is being used, download preferred jquery version.
-		else{script.src = jqueryDownloadSource + jqueryMinimumVersion + "/jquery.min.js";}//Download minimum jquery version.
-		//Waits until jQuery is ready before running ANDI
-		script.onload = script.onreadystatechange = function(){if(!done && (!this.readyState || this.readyState=="loaded" || this.readyState=="complete")){done=true; launchAndi();}};
-		document.getElementsByTagName("head")[0].appendChild(script);
+		// For extension, we need to load jQuery from bundled resources
+		// For now, assume jQuery will be pre-loaded or skip if not available
+		console.info('ANDI Extension: Loading jQuery');
+        await AndiExtensionBridge.loadScript("/jquery-3.7.1.min.js");
+		launchAndi();
 	}
 	else{ //sufficient version of jQuery already exists
 		launchAndi(); //initialize ANDI

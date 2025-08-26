@@ -33,8 +33,8 @@
 	#ANDI508 #lANDI508-viewList-button-prev:hover,
 	#ANDI508 #lANDI508-viewList-button-next:hover
 		{border:1px solid lemonchiffon !important;}
-	#ANDI508 #lANDI508-viewList-button-prev img,
-	#ANDI508 #lANDI508-viewList-button-next img
+	#ANDI508 #lANDI508-viewList-button-prev span,
+	#ANDI508 #lANDI508-viewList-button-next span
 		{width:22px}
 
 	/*=Test Page=*/

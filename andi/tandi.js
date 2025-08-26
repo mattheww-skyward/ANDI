@@ -152,8 +152,8 @@ tANDI.analyze = function(){
 			if(tableCountTotal > 1 && $("#ANDI508-prevTable-button").length === 0){
 				//Add "prev table" and "next table" buttons
 				$("#ANDI508-elementControls").append(
-					"<button id='ANDI508-prevTable-button' aria-label='Previous Table' title='Analyze Previous Table'><img src='"+icons_url+"prev-table.png' alt='' /></button> "+
-					"<button id='ANDI508-nextTable-button' aria-label='Next Table' title='Analyze Next Table'><img src='"+icons_url+"next-table.png' alt='' /></button>"
+					"<button id='ANDI508-prevTable-button' aria-label='Previous Table' title='Analyze Previous Table'><span>◀📋</span></button> "+
+					"<button id='ANDI508-nextTable-button' aria-label='Next Table' title='Analyze Next Table'><span>▶📋</span></button>"
 				);
 			}
 
@@ -278,7 +278,7 @@ tANDI.results = function(){
 			var startupMessage = "Discover accessibility markup for <span class='ANDI508-module-name-t'>tables</span> by tabbing to or hovering over the table cells. "+
 				"Determine if the ANDI Output conveys a complete and meaningful contextual equivalent for every data table cell. ";
 			if(dataTablesCount + presentationTablesCount > 1)
-				startupMessage += "Tables should be tested one at a time - Press the next table button <img src='"+icons_url+"next-table.png' style='width:12px' alt='' /> to cycle through the tables.";
+				startupMessage += "Tables should be tested one at a time - Press the next table button <span style='font-size:12px'>▶📋</span> to cycle through the tables.";
 			andiBar.showStartUpSummary(startupMessage,true);
 		}
 		else
@@ -1416,7 +1416,7 @@ tANDI.viewList_buildTable = function(){
 			if(!tableName){
 				var prevElement = $(table).prev();
 				if($(prevElement).is("h1,h2,h3,h4,h5,h6")){
-					tableName = "<span class='ANDI508-display-caution'><img alt='Caution: ' src='"+icons_url+"caution.png' /> "+
+					tableName = "<span class='ANDI508-display-caution'><span aria-label='Caution'>⚠️</span> "+
 						"Data Table with No Name, but Preceded by Heading: </span>"+
 						cleanUp($(prevElement).text());
 					namingMethod = "&lt;"+$(prevElement).prop("tagName").toLowerCase()+"&gt;";
@@ -1425,7 +1425,7 @@ tANDI.viewList_buildTable = function(){
 
 			//No Name
 			if(!tableName){
-				tableName = "<span class='ANDI508-display-caution'><img alt='Caution: ' src='"+icons_url+"caution.png' /> "+
+				tableName = "<span class='ANDI508-display-caution'><span aria-label='Caution'>⚠️</span> "+
 				"Data Table with No Name</span>";
 				namingMethod = "<span class='ANDI508-display-caution'>None</span>";
 			}
@@ -1511,7 +1511,7 @@ tANDI.viewList_toggle = function(btn){
 			.addClass("ANDI508-viewOtherResults-button-expanded")
 			.html(listIcon+"hide table list")
 			.attr("aria-expanded","true")
-			.find("img").attr("src",icons_url+"list-on.png");
+			.find("span").text("☑");
 		$("#tANDI508-viewList").slideDown(AndiSettings.andiAnimationSpeed).focus();
 		AndiModule.activeActionButtons.viewTableList = true;
 	}

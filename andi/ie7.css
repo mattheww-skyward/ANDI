@@ -44,7 +44,7 @@ html.ANDI508-testPage body.ANDI508-testPage #ANDI508-testPage .ANDI508-element.A
 #ANDI508-laser-container
 	{height:0px !important; width:0px !important;/*no support for svg*/}
 #ANDI508 #ANDI508-outputText
-	{background-image: url(icons/output18x18.png) !important;/*no support for background-size*/}
+	{/*background-image: url(icons/output18x18.png) !important;*//*no support for background-size - icons replaced with Unicode*/}
 	
 #ANDI508 #ANDI508-moduleMenu-container
 	{left:8.2em; top:-35px}

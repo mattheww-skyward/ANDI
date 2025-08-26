@@ -136,7 +136,7 @@ cANDI.results = function(){
 				.addClass("ANDI508-viewOtherResults-button-expanded")
 				.html(listIcon+"hide contrast playground")
 				.attr("aria-expanded","true")
-				.find("img").attr("src",icons_url+"list-on.png");
+				.find("span").text("☑");
 			cANDI.playground_open();
 			$("#cANDI508-contrastPlayground").slideDown(AndiSettings.andiAnimationSpeed).focus();
 			AndiModule.activeActionButtons.contrastPlayground = true;
@@ -389,12 +389,12 @@ cANDI.playground_validate = function(queryString){
 		//Is this a 6 digit hex value with #
 		if(value.length === 7 && validHex.test(value)){
 			//Set this element's color selector box
-			$(colorSelectorBox).attr("style", "background-color:"+value+" !important; background-image:none;");
+			$(colorSelectorBox).attr("style", "background-color:"+value+" !important; background-image:none;").html("");
 			$(this).removeAttr("aria-invalid");
 		}
 		else{
 			$(this).attr("aria-invalid","true");
-			$(colorSelectorBox).attr("style", "background:black url("+icons_url+"invalid.png) no-repeat top !important; background-size:1.3em !important");
+			$(colorSelectorBox).attr("style", "background:black !important; position:relative !important;").html("❌");
 			valid = false;
 		}
 	});
