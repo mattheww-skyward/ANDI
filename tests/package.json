@@ -1,0 +1,13 @@
+{
+  "name": "andi-tests",
+  "version": "1.0.0",
+  "description": "Tests for ANDI accessibility tool",
+  "scripts": {
+    "test": "playwright test",
+    "test:debug": "playwright test --debug",
+    "test:headed": "playwright test --headed"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0"
+  }
+}
