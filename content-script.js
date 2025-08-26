@@ -1,16 +1,6 @@
 // Content script that acts as a bridge between ANDI and the extension
 // This script runs in the isolated world and forwards requests to background script
 
-// Listen for messages from the background script
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.type === 'LAUNCH_ANDI') {
-    bootstrapANDI()
-      .then(() => sendResponse({ success: true }))
-      .catch(error => sendResponse({ success: false, error: error.message }));
-    return true; // Indicates we will send a response asynchronously
-  }
-});
-
 // Listen for messages from the page (ANDI) requesting script/CSS injection
 window.addEventListener('message', async (event) => {
   console.log("content script got message", event);
@@ -59,7 +49,10 @@ async function bootstrapANDI() {
     // Request background script to inject jQuery check and ANDI setup
     await chrome.runtime.sendMessage({
       type: 'ANDI_CONTENT_SCRIPT_REQUEST',
-      action: 'BOOTSTRAP_ANDI'
+      action: 'INJECT_SCRIPT',
+      data: {
+        src: "/andi/andi.js",
+      },
     });
 
     console.log('ANDI bootstrap completed successfully');
@@ -68,3 +61,4 @@ async function bootstrapANDI() {
     throw error;
   }
 }
+bootstrapANDI();

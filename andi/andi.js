@@ -66,11 +66,6 @@ var AndiExtensionBridge = {
       id: id
     });
   },
-
-  // Remove an element by ID
-  removeElement: function(id) {
-    return this.sendRequest('REMOVE_ELEMENT', { id: id });
-  }
 };
 
 // Listen for responses from the extension content script
@@ -4234,7 +4229,7 @@ var jqueryPreferredVersion = "3.7.1"; //The preferred (latest) version of jQuery
 var jqueryMinimumVersion = "1.9.1"; //The minimum version of jQuery we allow ANDI to use
 var jqueryDownloadSource = "https://ajax.googleapis.com/ajax/libs/jquery/"; //where we are downloading jquery from
 var oldIE = false; //used to determine if old version of IE is being used.
-(function(){
+(async function(){
 	//Determine if old IE compatability mode
 	if(navigator.userAgent.toLowerCase().indexOf("msie") != -1){if(parseInt(navigator.userAgent.toLowerCase().split("msie")[1]) < 9){oldIE = true;}}
 	//Determine if Jquery exists
@@ -4255,7 +4250,8 @@ var oldIE = false; //used to determine if old version of IE is being used.
 	if(needJquery){
 		// For extension, we need to load jQuery from bundled resources
 		// For now, assume jQuery will be pre-loaded or skip if not available
-		console.warn('ANDI Extension: jQuery not found, attempting to continue anyway');
+		console.warn('ANDI Extension: Loading jQuery');
+        await AndiExtensionBridge.loadScript("/jquery-3.7.1.min.js");
 		launchAndi();
 	}
 	else{ //sufficient version of jQuery already exists
