@@ -1,0 +1,24 @@
+{
+  "name": "andi-browser-extension",
+  "version": "1.0.0",
+  "description": "ANDI - Accessible Name & Description Inspector Browser Extension",
+  "scripts": {
+    "build": "npm run build:chrome && npm run build:firefox && npm run build:edge",
+    "build:chrome": "node scripts/build.js chrome",
+    "build:firefox": "node scripts/build.js firefox", 
+    "build:edge": "node scripts/build.js edge",
+    "package": "npm run package:chrome && npm run package:firefox && npm run package:edge",
+    "package:chrome": "web-ext build --source-dir dist/chrome --artifacts-dir packages --filename andi-chrome.zip",
+    "package:firefox": "web-ext build --source-dir dist/firefox --artifacts-dir packages --filename andi-firefox.zip",
+    "package:edge": "web-ext build --source-dir dist/edge --artifacts-dir packages --filename andi-edge.zip",
+    "clean": "rm -rf dist packages"
+  },
+  "devDependencies": {
+    "web-ext": "^7.9.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mattheww-skyward/ANDI.git"
+  },
+  "license": "SEE LICENSE IN LICENSE.md"
+}
