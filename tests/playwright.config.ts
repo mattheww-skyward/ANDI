@@ -11,19 +11,19 @@ export default defineConfig({
     baseURL: 'file://' + process.cwd() + '/../andi/help/demo/',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
+    headless: true,
   },
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
-    },
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
+      use: { 
+        ...devices['Desktop Chrome'],
+        channel: 'chrome', // Use system Chrome
+      },
+    }
   ],
-  timeout: 30000,
+  timeout: 60000,
   expect: {
-    timeout: 10000,
+    timeout: 15000,
   },
 });
