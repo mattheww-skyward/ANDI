@@ -32,8 +32,6 @@ async function handleContentScriptRequest(message, tabId) {
 
   try {
     switch (action) {
-      case 'BOOTSTRAP_ANDI':
-        return await bootstrapANDI(tabId);
       case 'INJECT_SCRIPT':
         return await injectScript(tabId, data);
       case 'INJECT_CSS':
